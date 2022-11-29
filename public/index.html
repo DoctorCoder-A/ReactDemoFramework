@@ -14,11 +14,87 @@
 <div id="root"></div>
 
 <script>
-    const logo = document.createElement('img')
-    logo.className = 'logo'
-    logo.src = './img/logo.png'
-    const domRoot = document.getElementById('root')
-    domRoot.append(logo)
+    function App({state}){
+        const app = document.createElement('div')
+        app.className = 'App';
+        app.append(Header())
+        app.append(Clock({time: state.time}))
+        app.append(Lots(state))
+
+        return app
+    }
+    function Lots({lots}){
+        const list = document.createElement('div')
+        list.className = 'lots'
+        lots.forEach((lot) => {
+            list.append(Lot({lot}))
+        })
+        return list
+    }
+    function Lot({lot}) {
+        const node = document.createElement('article')
+        node.className = 'lot'
+
+        const price = document.createElement('div')
+        price.innerText = lot.price+'$'
+        price.className = 'price'
+        node.append(price)
+
+        const name = document.createElement('h1')
+        name.innerHTML = lot.name
+        node.append(name)
+
+        const  description = document.createElement('div')
+        description.innerHTML = lot.description
+        node.append(description)
+// console.log(node.innerHTML)
+        return node
+    }
+    function Clock({time}){
+        const clock = document.createElement('div')
+        clock.className = 'clock'
+        clock.innerText = time.toLocaleTimeString()
+        return clock
+    }
+    function Logo (){
+        const logo = document.createElement('img')
+        logo.className = 'logo'
+        logo.src = './img/logo.png'
+        return logo
+    }
+    function Header(){
+        const header = document.createElement('header')
+        header.append(Logo())
+        return header
+    }
+    const state = {
+        time: new Date,
+        lots: [
+            {
+            id: 1,
+            name: 'Apple',
+            description: 'text text tex ...',
+            price: 23
+            },
+            {
+                id: 2,
+                name: 'Orange',
+                description: 'text text tex ...',
+                price: 29
+            },            {
+                id: 3,
+                name: 'Peach',
+                description: 'text text tex ...',
+                price: 31
+            }
+        ]
+    }
+    // ##############################################
+    render(App({state}), document.getElementById('root'))
+    // ##############################################
+    function render(newDom, realDomRoot){
+        realDomRoot.append(newDom)
+    }
 </script>
 </body>
 </html>
