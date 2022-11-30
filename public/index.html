@@ -14,7 +14,7 @@
 <div id="root"></div>
 
 <script>
-    function App({state}){
+    function App({state}) {
         const app = document.createElement('div')
         app.className = 'App';
         app.append(Header())
@@ -23,20 +23,30 @@
 
         return app
     }
-    function Lots({lots}){
+    function Loading (){
+        const node = document.createElement('div')
+        node.className = 'loading'
+        node.innerText = 'Loading....'
+        return node
+    }
+    function Lots({lots}) {
         const list = document.createElement('div')
+        if(!lots.length){
+            return  Loading()
+        }
         list.className = 'lots'
         lots.forEach((lot) => {
             list.append(Lot({lot}))
         })
         return list
     }
+
     function Lot({lot}) {
         const node = document.createElement('article')
         node.className = 'lot'
 
         const price = document.createElement('div')
-        price.innerText = lot.price+'$'
+        price.innerText = lot.price + '$'
         price.className = 'price'
         node.append(price)
 
@@ -44,57 +54,155 @@
         name.innerHTML = lot.name
         node.append(name)
 
-        const  description = document.createElement('div')
+        const description = document.createElement('div')
         description.innerHTML = lot.description
         node.append(description)
-// console.log(node.innerHTML)
         return node
     }
-    function Clock({time}){
-        const clock = document.createElement('div')
-        clock.className = 'clock'
-        clock.innerText = time.toLocaleTimeString()
-        return clock
+
+    function Clock({time}) {
+        const node = document.createElement('div')
+        node.className = 'clock'
+        const value = document.createElement('span')
+        value.className = 'value'
+        value.innerText = time.toLocaleTimeString()
+
+        const icon = document.createElement('span')
+        icon.className = 'icon'
+        if (time.getHours() > 7 && time.getHours() < 21) {
+            icon.className = 'icon day'
+        } else {
+            icon.className = 'icon night'
+        }
+        node.append(value)
+        node.append(icon)
+        return node
     }
-    function Logo (){
+
+    function Logo() {
         const logo = document.createElement('img')
         logo.className = 'logo'
         logo.src = './img/logo.png'
         return logo
     }
-    function Header(){
+
+    function Header() {
         const header = document.createElement('header')
         header.append(Logo())
         return header
     }
-    const state = {
+    // ##############################################
+
+    const api = {
+        get (url) {
+            switch (url){
+                case '/lots':
+                    return new Promise((resolve, reject)=>{
+                        setTimeout(()=>{
+                           resolve( [
+                                {
+                                    id: 1,
+                                    name: 'Apple',
+                                    description: 'text text tex ...',
+                                    price: 23
+                                },
+                                {
+                                    id: 2,
+                                    name: 'Orange',
+                                    description: 'text text tex ...',
+                                    price: 29
+                                }, {
+                                id: 3,
+                                name: 'Peach',
+                                description: 'text text tex ...',
+                                price: 32
+                            }
+                            ])
+                        },1000)
+                    })
+                default:
+            throw new Error('Not found Address!')}
+        }
+    }
+
+    let state = {
         time: new Date,
-        lots: [
-            {
-            id: 1,
-            name: 'Apple',
-            description: 'text text tex ...',
-            price: 23
-            },
-            {
-                id: 2,
-                name: 'Orange',
-                description: 'text text tex ...',
-                price: 29
-            },            {
-                id: 3,
-                name: 'Peach',
-                description: 'text text tex ...',
-                price: 31
+        lots: []
+    }
+    const stream =  {
+        subscribe(channel, listner){
+            const match = /price-(\d+)/.exec(channel)
+            if(match){
+                setInterval(() => {
+                    listner({
+                        id: parseInt(match[1]),
+                        price: Math.round(Math.random() * 10 +30)
+                    })
+                },400)
             }
-        ]
+        }
+
     }
     // ##############################################
-    render(App({state}), document.getElementById('root'))
+
+    function rendeApp({state}){
+        render(App({state}), document.getElementById('root'))
+    }
     // ##############################################
-    function render(newDom, realDomRoot){
+    setInterval(()=>{
+        state = {
+            ...state,
+            lots: state.lots.map((lot)=>{
+                return {
+                    ...lot,
+                    price: Math.round(Math.random()*100 )
+                }
+            })
+        }
+    }, 400)
+    // ##############################################
+
+    setInterval(() => {
+        state = {
+            ...state,
+            time: new Date()
+        }
+        rendeApp({state})
+    }, 1000)
+
+    api.get('/lots').then((lots)=>{
+        state = {
+            ...state,
+            lots
+        }
+        const onPrice = (data) => {
+            state = {
+                ...state,
+                lots: state.lots.map((lot) =>{
+                    if(data.id === lot.id){
+                        return {
+                            ...lot,
+                            price: Math.round(Math.random() * 100)
+                        }
+                    }
+                    return lot
+
+                })
+
+            }
+            return rendeApp({state})
+        }
+        lots.forEach((lot) => {
+            stream.subscribe(`price.${lot.id}`, onPrice)
+        })
+    })
+    // ##############################################
+    function render(newDom, realDomRoot) {
+        realDomRoot.innerHTML = null
         realDomRoot.append(newDom)
     }
+    // ##############################################
+
 </script>
 </body>
 </html>
